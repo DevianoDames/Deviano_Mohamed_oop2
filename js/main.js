@@ -1,147 +1,151 @@
-const playButton = document.getElementById("playButton");
+class SnakeGame {
+    constructor() {
+        this.playButton = document.getElementById("playButton");
+        this.retryButton = document.getElementById("retryButton");
+        this.scoreDisplay = document.getElementById("scoreDisplay");
 
-playButton.addEventListener("click", startGame);
+        this.gameCanvas = document.getElementById("gameCanvas");
+        this.context = this.gameCanvas.getContext("2d");
+        this.cellSize = 20;
+        this.canvasWidth = this.gameCanvas.width;
+        this.canvasHeight = this.gameCanvas.height;
+        this.snakeColor = "green";
+        this.foodColor = "red";
 
-function startGame() {
-    playButton.style.display = "none";
-    initializeGame();
-}
+        this.snake = {
+            body: [{x: 10, y: 10}],
+            direction: {x: 1, y: 0}
+        };
+        this.food = {x: 15, y: 15};
+        this.score = 0;
 
-function initializeGame() {
-    const gameCanvas = document.getElementById("gameCanvas");
-    const context = gameCanvas.getContext("2d");
-    const cellSize = 20;
-    const canvasWidth = gameCanvas.width;
-    const canvasHeight = gameCanvas.height;
-    const snakeColor = "green";
-    const foodColor = "red";
+        this.gameLoop = null;
 
-    let snakeObj = {
-        body: [{x: 10, y: 10}],
-        direction: {x: 1, y: 0}
-    };
+        this.eatSound = new Audio("music/eatSound.wav");
+        this.crashSound = new Audio("music/crash.wav");
+        this.backgroundMusic = new Audio("music/background_music.mp3");
 
-    let foodObj = {x: 15, y: 15};
+        this.playButton.addEventListener("click", this.startGame.bind(this));
+    }
 
-    let score = 0;
+    startGame() {
+        this.playButton.style.display = "none";
+        this.initializeGame();
+    }
 
-    const retryButton = document.getElementById("retryButton");
-    const scoreDisplay = document.getElementById("scoreDisplay");
+    initializeGame() {
+        this.retryButton.addEventListener("click", this.resetGame.bind(this));
+        this.backgroundMusic.play();
+        this.gameLoop = setInterval(this.main.bind(this), 100);
+        document.addEventListener("keydown", this.handleKeyPress.bind(this));
+    }
 
-    let gameLoop;
+    main() {
+        this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.drawOverlay();
+        this.drawSnake();
+        this.drawFood();
+        this.moveSnake();
+    }
 
-    const eatSound = new Audio("music/eatSound.wav");
-    const crashSound = new Audio("music/crash.wav");
-    const backgroundMusic = new Audio("music/background_music.mp3");
-
-    function drawSnake() {
-        context.fillStyle = snakeColor;
-        snakeObj.body.forEach(segment => {
-            context.beginPath();
-            context.arc((segment.x + 0.5) * cellSize, (segment.y + 0.5) * cellSize, cellSize / 2, 0, Math.PI * 2);
-            context.fill();
+    drawSnake() {
+        this.context.fillStyle = this.snakeColor;
+        this.snake.body.forEach(segment => {
+            this.context.beginPath();
+            this.context.arc((segment.x + 0.5) * this.cellSize, (segment.y + 0.5) * this.cellSize, this.cellSize / 2, 0, Math.PI * 2);
+            this.context.fill();
         });
     }
 
-    function drawFood() {
-        context.fillStyle = foodColor;
-        context.beginPath();
-        context.arc((foodObj.x + 0.5) * cellSize, (foodObj.y + 0.5) * cellSize, cellSize / 2, 0, Math.PI * 2);
-        context.fill();
+    drawFood() {
+        this.context.fillStyle = this.foodColor;
+        this.context.beginPath();
+        this.context.arc((this.food.x + 0.5) * this.cellSize, (this.food.y + 0.5) * this.cellSize, this.cellSize / 2, 0, Math.PI * 2);
+        this.context.fill();
     }
 
-    function drawOverlay() {
-        context.fillStyle = "rgba(0, 0, 0, 0.5)";
-        context.fillRect(0, 0, canvasWidth, canvasHeight);
+    drawOverlay() {
+        this.context.fillStyle = "rgba(0, 0, 0, 0.5)";
+        this.context.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
     }
 
-    function moveSnake() {
-        const head = {x: snakeObj.body[0].x + snakeObj.direction.x, y: snakeObj.body[0].y + snakeObj.direction.y};
-        snakeObj.body.unshift(head);
+    moveSnake() {
+        const head = {x: this.snake.body[0].x + this.snake.direction.x, y: this.snake.body[0].y + this.snake.direction.y};
+        this.snake.body.unshift(head);
 
         if (
-            head.x < 0 || head.x >= canvasWidth / cellSize ||
-            head.y < 0 || head.y >= canvasHeight / cellSize ||
-            checkCollision()
+            head.x < 0 || head.x >= this.canvasWidth / this.cellSize ||
+            head.y < 0 || head.y >= this.canvasHeight / this.cellSize ||
+            this.checkCollision()
         ) {
-            clearInterval(gameLoop);
-            retryButton.style.display = "block";
-            crashSound.currentTime = 0;
-            crashSound.play();
-            backgroundMusic.pause();
+            clearInterval(this.gameLoop);
+            this.retryButton.style.display = "block";
+            this.crashSound.currentTime = 0;
+            this.crashSound.play();
+            this.backgroundMusic.pause();
             return;
         }
 
-        if (head.x === foodObj.x && head.y === foodObj.y) {
-            foodObj.x = Math.floor(Math.random() * canvasWidth / cellSize);
-            foodObj.y = Math.floor(Math.random() * canvasHeight / cellSize);
-            score++;
-            scoreDisplay.textContent = `Score: ${score}`;
-            eatSound.currentTime = 0;
-            eatSound.play();
+        if (head.x === this.food.x && head.y === this.food.y) {
+            this.food.x = Math.floor(Math.random() * this.canvasWidth / this.cellSize);
+            this.food.y = Math.floor(Math.random() * this.canvasHeight / this.cellSize);
+            this.score++;
+            this.scoreDisplay.textContent = `Score: ${this.score}`;
+            this.eatSound.currentTime = 0;
+            this.eatSound.play();
         } else {
-            snakeObj.body.pop();
+            this.snake.body.pop();
         }
     }
 
-    function checkCollision() {
-        const head = snakeObj.body[0];
-        for (let i = 1; i < snakeObj.body.length; i++) {
-            if (head.x === snakeObj.body[i].x && head.y === snakeObj.body[i].y) {
+    checkCollision() {
+        const head = this.snake.body[0];
+        for (let i = 1; i < this.snake.body.length; i++) {
+            if (head.x === this.snake.body[i].x && head.y === this.snake.body[i].y) {
                 return true;
             }
         }
         return false;
     }
 
-    function main() {
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
-        drawOverlay();
-        drawSnake();
-        drawFood();
-        moveSnake();
-    }
-
-    document.addEventListener("keydown", event => {
+    handleKeyPress(event) {
         switch (event.key) {
             case "ArrowUp":
-                if (snakeObj.direction.y !== 1) snakeObj.direction = {x: 0, y: -1};
+                if (this.snake.direction.y !== 1) this.snake.direction = {x: 0, y: -1};
                 break;
             case "ArrowDown":
-                if (snakeObj.direction.y !== -1) snakeObj.direction = {x: 0, y: 1};
+                if (this.snake.direction.y !== -1) this.snake.direction = {x: 0, y: 1};
                 break;
             case "ArrowLeft":
-                if (snakeObj.direction.x !== 1) snakeObj.direction = {x: -1, y: 0};
+                if (this.snake.direction.x !== 1) this.snake.direction = {x: -1, y: 0};
                 break;
             case "ArrowRight":
-                if (snakeObj.direction.x !== -1) snakeObj.direction = {x: 1, y: 0};
+                if (this.snake.direction.x !== -1) this.snake.direction = {x: 1, y: 0};
                 break;
             case " ":
-                if (gameLoop) {
-                    clearInterval(gameLoop);
-                    backgroundMusic.pause();
-                    gameLoop = null;
+                if (this.gameLoop) {
+                    clearInterval(this.gameLoop);
+                    this.backgroundMusic.pause();
+                    this.gameLoop = null;
                 } else {
-                    gameLoop = setInterval(main, 100);
-                    backgroundMusic.play();
+                    this.gameLoop = setInterval(this.main.bind(this), 100);
+                    this.backgroundMusic.play();
                 }
                 break;
         }
-    });
+    }
 
-    retryButton.addEventListener("click", () => {
-        snakeObj = {
+    resetGame() {
+        this.snake = {
             body: [{x: 10, y: 10}],
             direction: {x: 1, y: 0}
         };
-        foodObj = {x: 15, y: 16};
-        score = 0;
-        scoreDisplay.textContent = `Score: ${score}`;
-        retryButton.style.display = "none";
-        gameLoop = setInterval(main, 100);
-        backgroundMusic.play();
-    });
+        this.food = {x: 15, y: 16};
+        this.score = 0;
+        this.scoreDisplay.textContent = `Score: ${this.score}`;
+        this.retryButton.style.display = "none";
+        this.initializeGame();
+    }
+}
 
-    gameLoop = setInterval(main, 100);
-    backgroundMusic.play();
-};
+new SnakeGame();
