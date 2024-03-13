@@ -8,23 +8,19 @@
 
 </head>
 <body style="background-image: url('images/snake_background.jpg'); background-repeat: repeat; background-size: cover;">
-    <!-- Your HTML content here -->
-</body>
-
-<canvas id="gameCanvas" width="1000" height="600"></canvas>
-<audio id="backgroundMusic" loop>
-    <source src="music/background_music.mp3" type="audio/mpeg">
-</audio>
-<audio id="eatSound">
-    <source src="music/eatSound.wav" type="audio/mpeg">
-
-</audio>
-<audio id="crashSound">
-    <source src="music/crash.wav" type="audio/mpeg">
-    
-</audio>
-<button id="retryButton" class="hidden">Retry</button>
-<div id="scoreDisplay">Score: 0</div>
-<script src="/js/main.js"></script>
+    <button id="playButton">Play</button>
+    <canvas id="gameCanvas" width="1000" height="600"></canvas>
+    <audio id="backgroundMusic" loop>
+        <source src="music/background_music.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="eatSound">
+        <source src="music/eatSound.wav" type="audio/mpeg">
+    </audio>
+    <audio id="crashSound">
+        <source src="music/crash.wav" type="audio/mpeg">
+    </audio>
+    <button id="retryButton" class="hidden">Retry</button>
+    <div id="scoreDisplay">Score: 0</div>
+    <script src="/js/main.js"></script>
 </body>
 </html>
